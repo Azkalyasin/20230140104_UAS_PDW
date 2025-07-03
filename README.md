@@ -62,20 +62,30 @@ Sistem manajemen praktikum berbasis web yang memudahkan mahasiswa dan asisten da
 
 ## 📸 Screenshot
 
-### Dashboard Mahasiswa
+## Mahasiswa
+
 
 ![Dashboard Mahasiswa](screenshots/dashboard-mahasiswa.png)
 
-### Dashboard Asisten
+## Asisten
 
-![Dashboard Asisten](screenshots/dashboard-asisten.png)
+### Mengelola Mata Praktikum
 
-### Upload Laporan
+![Screenshot 2025-07-03 105237](https://github.com/user-attachments/assets/0b2beca0-c0e0-4aa1-813e-22f79a14c394)
 
-![Upload Laporan](screenshots/upload-laporan.png)
+### Mengelola Modul
 
-### Kelola Praktikum
+![Screenshot 2025-07-03 105300](https://github.com/user-attachments/assets/0ed443c2-b850-4705-88b8-84d8d60e3929)
 
-![Kelola Praktikum](screenshots/kelola-praktikum.png)
+### Melihat Laporan Masuk
+
+![Screenshot 2025-07-03 105323](https://github.com/user-attachments/assets/7e27c06d-b5a1-4266-afb6-207b2c5097e6)
+
+### Mengelola Akun Pengguna
+
+![Screenshot 2025-07-03 105342](https://github.com/user-attachments/assets/f22c2db7-9c8a-4700-bec2-2d1e8a4db15b)
+
+
+
 
 

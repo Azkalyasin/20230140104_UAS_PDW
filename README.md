@@ -21,18 +21,17 @@ Sistem manajemen praktikum berbasis web yang memudahkan mahasiswa dan asisten da
 - 📤 Upload laporan tugas per modul
 - 📊 Melihat status pengumpulan dan nilai
 - 🚪 Keluar dari praktikum (dengan konfirmasi)
-- 📱 Interface responsif untuk mobile dan desktop
 
 ### 👨‍🏫 **Fitur Asisten**
 
 - 🔐 Login dengan akun asisten
 - 📚 Manajemen praktikum (CRUD)
 - 📖 Manajemen modul praktikum
-- 👥 Manajemen pengguna (mahasiswa dan asisten)
+- 👥 Manajemen pengguna ( Data mahasiswa dan asisten)
 - 📄 Upload materi praktikum
 - 📊 Melihat laporan yang masuk
 - ✅ Penilaian laporan mahasiswa
-- 📈 Dashboard dengan statistik
+
 
 
 ## 🛠 Teknologi yang Digunakan
@@ -51,13 +50,6 @@ Sistem manajemen praktikum berbasis web yang memudahkan mahasiswa dan asisten da
 - `modul` - Data modul per praktikum
 - `pendaftaran_praktikum` - Relasi mahasiswa-praktikum
 - `laporan` - Data laporan yang dikumpulkan mahasiswa
-
-### Pengaturan Upload
-
-- **Maksimal ukuran file**: 10MB
-- **Format yang didukung**: PDF, DOC, DOCX
-- **Folder upload**: `uploads/laporan/` dan `uploads/materi/`
-
 
 
 ## 📸 Screenshot

@@ -1,6 +1,4 @@
-# 🎓 SIMPRAK - Sistem Pengumpulan Tugas Praktikum
-
-Sistem manajemen praktikum berbasis web yang memudahkan mahasiswa dan asisten dalam mengelola praktikum, modul, dan pengumpulan laporan tugas.
+# 🎓 Sistem Pengumpulan Tugas Praktikum
 
 ## 📋 Daftar Isi
 

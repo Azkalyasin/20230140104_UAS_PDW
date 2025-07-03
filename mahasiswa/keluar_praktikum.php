@@ -2,7 +2,6 @@
 session_start();
 require_once '../config.php';
 
-// Cek apakah user sudah login dan role-nya mahasiswa
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'mahasiswa') {
     header('Location: ../login.php');
     exit();
@@ -10,24 +9,32 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'mahasiswa') {
 
 $user_id = $_SESSION['user_id'];
 
-// Ambil data mahasiswa
-$sql = "SELECT * FROM users WHERE id = ?";
+// Ambil praktikum yang diikuti mahasiswa
+$sql = "SELECT pp.praktikum_id, mp.nama_mk, mp.kode_mk
+        FROM pendaftaran_praktikum pp
+        JOIN mata_praktikum mp ON pp.praktikum_id = mp.id
+        WHERE pp.mahasiswa_id = ?
+        ORDER BY mp.nama_mk ASC";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
-$user = $result->fetch_assoc();
 
-// Statistik praktikum
-$stats_sql = "SELECT 
-    (SELECT COUNT(*) FROM pendaftaran_praktikum WHERE mahasiswa_id = ?) as total_praktikum,
-    (SELECT COUNT(*) FROM laporan l JOIN modul m ON l.modul_id = m.id JOIN pendaftaran_praktikum pp ON m.praktikum_id = pp.praktikum_id WHERE pp.mahasiswa_id = ?) as total_laporan,
-    (SELECT COUNT(*) FROM laporan l JOIN modul m ON l.modul_id = m.id JOIN pendaftaran_praktikum pp ON m.praktikum_id = pp.praktikum_id WHERE pp.mahasiswa_id = ? AND l.nilai IS NULL) as menunggu_nilai";
-$stats_stmt = $conn->prepare($stats_sql);
-$stats_stmt->bind_param("iii", $user_id, $user_id, $user_id);
-$stats_stmt->execute();
-$stats_result = $stats_stmt->get_result();
-$stats = $stats_result->fetch_assoc();
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['praktikum_id'])) {
+    $praktikum_id = $_POST['praktikum_id'];
+    
+    // Hapus pendaftaran praktikum
+    $delete_sql = "DELETE FROM pendaftaran_praktikum WHERE mahasiswa_id = ? AND praktikum_id = ?";
+    $delete_stmt = $conn->prepare($delete_sql);
+    $delete_stmt->bind_param("ii", $user_id, $praktikum_id);
+    
+    if ($delete_stmt->execute()) {
+        echo "<script>alert('Berhasil keluar dari praktikum!'); window.location.href='praktikum_saya.php';</script>";
+    } else {
+        echo "<script>alert('Gagal keluar dari praktikum. Silakan coba lagi.');</script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -35,7 +42,7 @@ $stats = $stats_result->fetch_assoc();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Mahasiswa</title>
+    <title>Keluar Praktikum</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
@@ -173,202 +180,213 @@ $stats = $stats_result->fetch_assoc();
             text-align: center;
         }
         
-        .welcome-title {
+        .page-title {
             color: #4a5568;
             font-size: 2.5rem;
             margin-bottom: 15px;
             font-weight: 700;
         }
         
-        .welcome-text {
-            font-size: 1.2rem;
+        .page-subtitle {
             color: #718096;
-            margin-bottom: 10px;
-        }
-        
-        .user-info {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .info-item {
-            text-align: center;
-            padding: 15px 25px;
-            background: linear-gradient(135deg, #f7fafc, #edf2f7);
-            border-radius: 15px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .info-label {
-            font-size: 0.9rem;
-            color: #718096;
-            margin-bottom: 5px;
-        }
-        
-        .info-value {
             font-size: 1.1rem;
-            font-weight: 600;
-            color: #2d3748;
         }
         
-        /* Stats Section */
-        .stats-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        .warning-alert {
+            background: linear-gradient(135deg, #fef5e7, #fbd38d);
+            border: 1px solid #f6ad55;
+            color: #d69e2e;
+            padding: 20px;
+            border-radius: 15px;
             margin-bottom: 30px;
-        }
-        
-        .section-title {
-            color: #2d3748;
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 25px;
             display: flex;
             align-items: center;
             gap: 15px;
         }
         
-        .section-icon {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
+        .warning-icon {
+            font-size: 1.5rem;
+            color: #ed8936;
         }
         
-        .stats-grid {
+        .warning-text {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        
+        .praktikum-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 25px;
         }
         
-        .stat-card {
-            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+        .praktikum-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
-            text-align: center;
-            border: 1px solid #e2e8f0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
         
-        .stat-card::before {
+        .praktikum-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .praktikum-card::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #f56565, #e53e3e);
         }
         
-        .stat-card:hover::before {
-            left: 100%;
+        .praktikum-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
         }
         
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
-        }
-        
-        .stat-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 15px;
+        .praktikum-icon {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            margin: 0 auto 20px;
-            color: white;
+            font-size: 1.8rem;
+            margin-right: 25px;
         }
         
-        .stat-icon.praktikum {
-            background: linear-gradient(135deg, #4299e1, #3182ce);
-        }
-        
-        .stat-icon.laporan {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-        }
-        
-        .stat-icon.menunggu {
-            background: linear-gradient(135deg, #ed8936, #dd6b20);
-        }
-        
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
+        .praktikum-info h3 {
             color: #2d3748;
-            margin-bottom: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
         
-        .stat-label {
-            font-size: 1rem;
+        .praktikum-code {
             color: #718096;
+            font-size: 1.1rem;
             font-weight: 500;
         }
         
-        /* Quick Actions */
-        .quick-actions {
+        .praktikum-details {
+            margin-bottom: 25px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            color: #4a5568;
+        }
+        
+        .detail-icon {
+            width: 20px;
+            margin-right: 12px;
+            color: #f56565;
+        }
+        
+        .detail-text {
+            font-size: 1rem;
+        }
+        
+        .praktikum-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565, #e53e3e);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #e53e3e, #c53030);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 101, 101, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #a0aec0, #718096);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #718096, #4a5568);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(160, 174, 192, 0.3);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            padding: 30px;
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
         
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+        .empty-icon {
+            font-size: 5rem;
+            color: #a0aec0;
+            margin-bottom: 25px;
         }
         
-        .action-card {
-            background: linear-gradient(135deg, #f7fafc, #edf2f7);
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            text-decoration: none;
-            color: #333;
-            transition: all 0.3s ease;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .action-card:hover {
-            background: linear-gradient(135deg, #edf2f7, #e2e8f0);
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        
-        .action-icon {
-            font-size: 2rem;
+        .empty-title {
+            font-size: 1.8rem;
+            color: #4a5568;
             margin-bottom: 15px;
-            display: block;
-        }
-        
-        .action-title {
-            font-size: 1.1rem;
             font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 8px;
         }
         
-        .action-desc {
-            font-size: 0.9rem;
+        .empty-desc {
             color: #718096;
-            line-height: 1.4;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+        }
+        
+        .empty-action {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .empty-action:hover {
+            background: linear-gradient(135deg, #3182ce, #2c5282);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.3);
         }
         
         /* Mobile Responsive */
@@ -412,36 +430,46 @@ $stats = $stats_result->fetch_assoc();
                 padding: 20px;
             }
             
-            .welcome-title {
+            .page-title {
                 font-size: 2rem;
             }
             
-            .user-info {
+            .praktikum-card {
+                padding: 20px;
+            }
+            
+            .praktikum-header {
                 flex-direction: column;
-                gap: 15px;
+                text-align: center;
             }
             
-            .stats-grid {
-                grid-template-columns: 1fr;
+            .praktikum-icon {
+                margin-right: 0;
+                margin-bottom: 20px;
             }
             
-            .actions-grid {
-                grid-template-columns: 1fr;
+            .praktikum-actions {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
             }
         }
         
         @media (max-width: 480px) {
-            .welcome-title {
+            .page-title {
                 font-size: 1.8rem;
             }
             
-            .welcome-text {
-                font-size: 1rem;
+            .praktikum-card {
+                padding: 15px;
             }
             
-            .stats-section,
-            .quick-actions {
-                padding: 20px;
+            .warning-alert {
+                padding: 15px;
+                flex-direction: column;
+                text-align: center;
             }
         }
     </style>
@@ -465,7 +493,7 @@ $stats = $stats_result->fetch_assoc();
             
             <div class="sidebar-menu">
                 <div class="menu-item">
-                    <a href="dashboard.php" class="menu-link active">
+                    <a href="dashboard.php" class="menu-link">
                         <i class="fas fa-home menu-icon"></i>
                         <span class="menu-text">Dashboard</span>
                     </a>
@@ -500,7 +528,7 @@ $stats = $stats_result->fetch_assoc();
                 </div>
                 
                 <div class="menu-item">
-                    <a href="keluar_praktikum.php" class="menu-link">
+                    <a href="keluar_praktikum.php" class="menu-link active">
                         <i class="fas fa-sign-out-alt menu-icon"></i>
                         <span class="menu-text">Keluar Praktikum</span>
                     </a>
@@ -518,96 +546,68 @@ $stats = $stats_result->fetch_assoc();
         <!-- Main Content -->
         <div class="main-content">
             <div class="content-header">
-                <h1 class="welcome-title">Selamat Datang!</h1>
-                <p class="welcome-text">Kelola praktikum dan laporan Anda dengan mudah</p>
-                
-                <div class="user-info">
-                    <div class="info-item">
-                        <div class="info-label">Nama</div>
-                        <div class="info-value"><?php echo htmlspecialchars($user['nama']); ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">NIM</div>
-                        <div class="info-value"><?php echo htmlspecialchars($user['nim'] ?? 'N/A'); ?></div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">Role</div>
-                        <div class="info-value">Mahasiswa</div>
-                    </div>
+                <h1 class="page-title"><i class="fas fa-sign-out-alt"></i> Keluar Praktikum</h1>
+                <p class="page-subtitle">Keluar dari praktikum yang sedang Anda ikuti</p>
+            </div>
+
+            <div class="warning-alert">
+                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <div class="warning-text">
+                    <strong>Peringatan:</strong> Keluar dari praktikum akan menghapus semua data pendaftaran dan laporan yang telah Anda kumpulkan. Tindakan ini tidak dapat dibatalkan.
                 </div>
             </div>
 
-            <!-- Statistics Section -->
-            <div class="stats-section">
-                <div class="section-title">
-                    <div class="section-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    Statistik Praktikum
-                </div>
-                
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon praktikum">
-                            <i class="fas fa-graduation-cap"></i>
+            <?php if ($result && $result->num_rows > 0): ?>
+                <div class="praktikum-grid">
+                    <?php while($praktikum = $result->fetch_assoc()): ?>
+                        <div class="praktikum-card">
+                            <div class="praktikum-header">
+                                <div class="praktikum-icon">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                <div class="praktikum-info">
+                                    <h3><?php echo htmlspecialchars($praktikum['nama_mk']); ?></h3>
+                                    <div class="praktikum-code"><?php echo htmlspecialchars($praktikum['kode_mk']); ?></div>
+                                </div>
+                            </div>
+                            
+                            <div class="praktikum-details">
+                                <div class="detail-item">
+                                    <i class="fas fa-info-circle detail-icon"></i>
+                                    <span class="detail-text">Anda saat ini terdaftar di praktikum ini</span>
+                                </div>
+                                <div class="detail-item">
+                                    <i class="fas fa-exclamation-triangle detail-icon"></i>
+                                    <span class="detail-text">Keluar akan menghapus semua data pendaftaran</span>
+                                </div>
+                            </div>
+                            
+                            <div class="praktikum-actions">
+                                <form method="post" style="flex: 1;">
+                                    <input type="hidden" name="praktikum_id" value="<?php echo $praktikum['praktikum_id']; ?>">
+                                    <button type="submit" class="action-btn btn-danger" onclick="return confirm('Yakin ingin keluar dari praktikum ini? Semua data akan dihapus.')">
+                                        <i class="fas fa-sign-out-alt"></i> Keluar Praktikum
+                                    </button>
+                                </form>
+                                <a href="praktikum_saya.php" class="action-btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Kembali
+                                </a>
+                            </div>
                         </div>
-                        <div class="stat-number"><?php echo $stats['total_praktikum'] ?? 0; ?></div>
-                        <div class="stat-label">Praktikum Diikuti</div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon laporan">
-                            <i class="fas fa-file-alt"></i>
-                        </div>
-                        <div class="stat-number"><?php echo $stats['total_laporan'] ?? 0; ?></div>
-                        <div class="stat-label">Laporan Dikumpulkan</div>
-                    </div>
-                    
-                    <div class="stat-card">
-                        <div class="stat-icon menunggu">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-number"><?php echo $stats['menunggu_nilai'] ?? 0; ?></div>
-                        <div class="stat-label">Menunggu Penilaian</div>
-                    </div>
+                    <?php endwhile; ?>
                 </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <div class="section-title">
-                    <div class="section-icon">
-                        <i class="fas fa-bolt"></i>
+            <?php else: ?>
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-book"></i>
                     </div>
-                    Akses Cepat
-                </div>
-                
-                <div class="actions-grid">
-                    <a href="praktikum_saya.php" class="action-card">
-                        <i class="fas fa-book-open action-icon" style="color: #4299e1;"></i>
-                        <div class="action-title">Praktikum Saya</div>
-                        <div class="action-desc">Lihat praktikum yang sedang diikuti</div>
-                    </a>
-                    
-                    <a href="daftar_praktikum.php" class="action-card">
-                        <i class="fas fa-list-alt action-icon" style="color: #48bb78;"></i>
-                        <div class="action-title">Daftar Praktikum</div>
-                        <div class="action-desc">Daftar ke praktikum baru</div>
-                    </a>
-                    
-                    <a href="upload_laporan.php" class="action-card">
-                        <i class="fas fa-upload action-icon" style="color: #ed8936;"></i>
-                        <div class="action-title">Upload Laporan</div>
-                        <div class="action-desc">Upload laporan praktikum</div>
-                    </a>
-                    
-                    <a href="detail_praktikum.php" class="action-card">
-                        <i class="fas fa-info-circle action-icon" style="color: #9f7aea;"></i>
-                        <div class="action-title">Detail Praktikum</div>
-                        <div class="action-desc">Lihat detail praktikum</div>
+                    <div class="empty-title">Belum ada praktikum yang diikuti</div>
+                    <div class="empty-desc">Silakan daftar ke praktikum yang tersedia terlebih dahulu</div>
+                    <a href="daftar_praktikum.php" class="empty-action">
+                        <i class="fas fa-plus"></i> Daftar Praktikum
                     </a>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -638,4 +638,4 @@ $stats = $stats_result->fetch_assoc();
         });
     </script>
 </body>
-</html>
+</html> 

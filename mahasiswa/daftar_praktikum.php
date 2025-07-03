@@ -544,11 +544,11 @@ while($row = $enrolled_result->fetch_assoc()) {
                                 </div>
                                 <div class="detail-item">
                                     <i class="fas fa-user-tie detail-icon"></i>
-                                    <span class="detail-text">Asisten: <?php echo htmlspecialchars($praktikum['asisten']); ?></span>
+                                    <span class="detail-text">Asisten: <?php echo isset($praktikum['asisten']) ? htmlspecialchars($praktikum['asisten']) : '-'; ?></span>
                                 </div>
                                 <div class="detail-item">
                                     <i class="fas fa-calendar detail-icon"></i>
-                                    <span class="detail-text">Semester: <?php echo htmlspecialchars($praktikum['semester']); ?></span>
+                                    <span class="detail-text">Semester: <?php echo isset($praktikum['semester']) ? htmlspecialchars($praktikum['semester']) : '-'; ?></span>
                                 </div>
                             </div>
                             

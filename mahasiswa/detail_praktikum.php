@@ -625,7 +625,7 @@ $result = $stmt->get_result();
                                         </div>
                                         <div class="detail-title">Semester</div>
                                     </div>
-                                    <div class="detail-value"><?php echo htmlspecialchars($praktikum['semester']); ?></div>
+                                    <div class="detail-value"><?php echo isset($praktikum['semester']) ? htmlspecialchars($praktikum['semester']) : '-'; ?></div>
                                 </div>
                                 
                                 <div class="detail-item">

@@ -62,10 +62,6 @@ Sistem manajemen praktikum berbasis web yang memudahkan mahasiswa dan asisten da
 
 ## 📸 Screenshot
 
-## Mahasiswa
-
-
-![Dashboard Mahasiswa](screenshots/dashboard-mahasiswa.png)
 
 ## Asisten
 
@@ -85,6 +81,24 @@ Sistem manajemen praktikum berbasis web yang memudahkan mahasiswa dan asisten da
 
 ![Screenshot 2025-07-03 105342](https://github.com/user-attachments/assets/f22c2db7-9c8a-4700-bec2-2d1e8a4db15b)
 
+
+## Katalog bisa diakses publik
+
+![image](https://github.com/user-attachments/assets/2b04e7ad-27c5-43c1-863e-88d9e55ada3e)
+
+## Mahasiswa
+
+### Mendaftar ke Praktikum
+
+![Screenshot 2025-07-03 111504](https://github.com/user-attachments/assets/583565f4-4c2b-423a-a9a7-82ad34804d45)
+
+### Melihat Praktikum yang Diikuti
+
+![Screenshot 2025-07-03 111644](https://github.com/user-attachments/assets/5d7b31c7-10c1-4c50-a331-bd983a5cd6b9)
+
+### Melihat Detail & Tugas
+
+![Screenshot 2025-07-03 111203](https://github.com/user-attachments/assets/db1be860-e5ae-4b74-ab3a-26be314ebab5)
 
 
 
